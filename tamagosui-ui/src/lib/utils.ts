@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 import type { SuiObjectResponse } from "@mysten/sui/client";
-import type { RawPetStructFields, PetStruct } from "@/types/Pet";
+import type { RawPetStructFields, BasePetStruct } from "@/types/Pet";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -22,7 +22,7 @@ export function getSuiObjectFields<T>(object: SuiObjectResponse): T | null {
 
 export function normalizeSuiPetObject(
   object: SuiObjectResponse,
-): PetStruct | null {
+): BasePetStruct | null {
   const fields = getSuiObjectFields<RawPetStructFields>(object);
   if (!fields) return null;
 
@@ -41,7 +41,7 @@ export function normalizeSuiPetObject(
       experience: Number(fields.game_data.fields.experience),
       level: fields.game_data.fields.level,
     },
-  } as PetStruct;
+  } as BasePetStruct;
 }
 
 export function getTimeSinceAdoption(adoptedAt: number) {

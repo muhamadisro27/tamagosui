@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 import {
   CoinsIcon,
   HeartIcon,
@@ -11,65 +11,66 @@ import {
   BriefcaseIcon,
   ZapIcon,
   ChevronUpIcon,
-} from "lucide-react";
+} from "lucide-react"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
+} from "@/components/ui/card"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@/components/ui/tooltip"
 
-import { StatDisplay } from "./components/StatDisplay";
-import { ActionButton } from "./components/ActionButton";
-import { WardrobeManager } from "./components/Wardrobe";
+import { StatDisplay } from "./components/StatDisplay"
+import { ActionButton } from "./components/ActionButton"
+import { WardrobeManager } from "./components/Wardrobe"
 
-import { useMutateCheckAndLevelUp } from "@/hooks/useMutateCheckLevel";
-import { useMutateFeedPet } from "@/hooks/useMutateFeedPet";
-import { useMutateLetPetSleep } from "@/hooks/useMutateLetPetSleep";
-import { useMutatePlayWithPet } from "@/hooks/useMutatePlayWithPet";
-import { useMutateWakeUpPet } from "@/hooks/useMutateWakeUpPet";
-import { useMutateWorkForCoins } from "@/hooks/useMutateWorkForCoins";
-import { useQueryGameBalance } from "@/hooks/useQueryGameBalance";
+import { useMutateCheckAndLevelUp } from "@/hooks/useMutateCheckLevel"
+import { useMutateFeedPet } from "@/hooks/useMutateFeedPet"
+import { useMutateLetPetSleep } from "@/hooks/useMutateLetPetSleep"
+import { useMutatePlayWithPet } from "@/hooks/useMutatePlayWithPet"
+import { useMutateWakeUpPet } from "@/hooks/useMutateWakeUpPet"
+import { useMutateWorkForCoins } from "@/hooks/useMutateWorkForCoins"
+import { useQueryGameBalance } from "@/hooks/useQueryGameBalance"
 
-import type { PetStruct } from "@/types/Pet";
+import type { PetStruct } from "@/types/Pet"
+import Skeleton from "@/components/skeleton"
 
 type PetDashboardProps = {
-  pet: PetStruct;
-};
+  pet: PetStruct
+}
 
 export default function PetComponent({ pet }: PetDashboardProps) {
   // --- Fetch Game Balance ---
   const { data: gameBalance, isLoading: isLoadingGameBalance } =
-    useQueryGameBalance();
+    useQueryGameBalance()
 
-  const [displayStats, setDisplayStats] = useState(pet.stats);
+  const [displayStats, setDisplayStats] = useState(pet.stats)
 
   // --- Hooks for Main Pet Actions ---
-  const { mutate: mutateFeedPet, isPending: isFeeding } = useMutateFeedPet();
+  const { mutate: mutateFeedPet, isPending: isFeeding } = useMutateFeedPet()
   const { mutate: mutatePlayWithPet, isPending: isPlaying } =
-    useMutatePlayWithPet();
+    useMutatePlayWithPet()
   const { mutate: mutateWorkForCoins, isPending: isWorking } =
-    useMutateWorkForCoins();
+    useMutateWorkForCoins()
 
   const { mutate: mutateLetPetSleep, isPending: isSleeping } =
-    useMutateLetPetSleep();
+    useMutateLetPetSleep()
   const { mutate: mutateWakeUpPet, isPending: isWakingUp } =
-    useMutateWakeUpPet();
+    useMutateWakeUpPet()
   const { mutate: mutateLevelUp, isPending: isLevelingUp } =
-    useMutateCheckAndLevelUp();
+    useMutateCheckAndLevelUp()
 
   useEffect(() => {
-    setDisplayStats(pet.stats);
-  }, [pet.stats]);
+    setDisplayStats(pet.stats)
+  }, [pet.stats])
 
   useEffect(() => {
     // This effect only runs when the pet is sleeping
@@ -78,58 +79,104 @@ export default function PetComponent({ pet }: PetDashboardProps) {
       const intervalId = setInterval(() => {
         setDisplayStats((prev) => {
           const energyPerSecond =
-            1000 / Number(gameBalance.sleep_energy_gain_ms);
+            1000 / Number(gameBalance.sleep_energy_gain_ms)
           const hungerLossPerSecond =
-            1000 / Number(gameBalance.sleep_hunger_loss_ms);
+            1000 / Number(gameBalance.sleep_hunger_loss_ms)
           const happinessLossPerSecond =
-            1000 / Number(gameBalance.sleep_happiness_loss_ms);
+            1000 / Number(gameBalance.sleep_happiness_loss_ms)
 
           return {
             energy: Math.min(
               gameBalance.max_stat,
-              prev.energy + energyPerSecond,
+              prev.energy + energyPerSecond
             ),
             hunger: Math.max(0, prev.hunger - hungerLossPerSecond),
             happiness: Math.max(0, prev.happiness - happinessLossPerSecond),
-          };
-        });
-      }, 1000); // Runs every second
+          }
+        })
+      }, 1000) // Runs every second
 
       // IMPORTANT: Clean up the timer when the pet wakes up or the component unmounts
-      return () => clearInterval(intervalId);
+      return () => clearInterval(intervalId)
     }
-  }, [pet.isSleeping, isWakingUp, gameBalance]); // Rerun this effect if sleep status or balance changes
+  }, [pet.isSleeping, isWakingUp, gameBalance]) // Rerun this effect if sleep status or balance changes
 
   if (isLoadingGameBalance || !gameBalance)
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <h1 className="text-2xl">Loading Game Rules...</h1>
-      </div>
-    );
+      <Card className="w-full max-w-sm shadow-hard border-2 border-primary">
+        <CardHeader className="text-center">
+          <CardTitle className="text-4xl">
+            <div className="w-full h-6 animate-pulse bg-gray-400/60 rounded-sm" />
+          </CardTitle>
+          <CardDescription className="text-lg">
+            <div className="w-full h-6 animate-pulse bg-gray-400/60 rounded-sm" />
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <div className="flex justify-center">
+            <Skeleton />
+          </div>
+
+          {/* Game & Stats Data */}
+          <div className="space-y-3">
+            <div className="flex justify-between space-x-2 items-center text-lg">
+              <Skeleton />
+              <Skeleton />
+            </div>
+
+            {/* Stat Bars */}
+            <div className="space-y-2">
+              <Skeleton />
+              <Skeleton />
+              <Skeleton />
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <Skeleton />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Skeleton />
+            <Skeleton />
+            <div className="col-span-2 space-y-2">
+              <Skeleton />
+              <Skeleton />
+            </div>
+          </div>
+          <div className="col-span-2 pt-2 space-y-2">
+            <Skeleton />
+            <Skeleton />
+          </div>
+        </CardContent>
+        <Skeleton />
+      </Card>
+    )
 
   // --- Client-side UI Logic & Button Disabling ---
   // `isAnyActionPending` prevents the user from sending multiple transactions at once.
   const isAnyActionPending =
-    isFeeding || isPlaying || isSleeping || isWorking || isLevelingUp;
+    isFeeding || isPlaying || isSleeping || isWorking || isLevelingUp
 
   // These `can...` variables mirror the smart contract's rules (`assert!`) on the client-side.
   const canFeed =
     !pet.isSleeping &&
     pet.stats.hunger < gameBalance.max_stat &&
-    pet.game_data.coins >= Number(gameBalance.feed_coins_cost);
+    pet.game_data.coins >= Number(gameBalance.feed_coins_cost)
   const canPlay =
     !pet.isSleeping &&
     pet.stats.energy >= gameBalance.play_energy_loss &&
-    pet.stats.hunger >= gameBalance.play_hunger_loss;
+    pet.stats.hunger >= gameBalance.play_hunger_loss
   const canWork =
     !pet.isSleeping &&
     pet.stats.energy >= gameBalance.work_energy_loss &&
     pet.stats.happiness >= gameBalance.work_happiness_loss &&
-    pet.stats.hunger >= gameBalance.work_hunger_loss;
+    pet.stats.hunger >= gameBalance.work_hunger_loss
   const canLevelUp =
     !pet.isSleeping &&
     pet.game_data.experience >=
-      pet.game_data.level * Number(gameBalance.exp_per_level);
+      pet.game_data.level * Number(gameBalance.exp_per_level)
 
   return (
     <TooltipProvider>
@@ -141,7 +188,7 @@ export default function PetComponent({ pet }: PetDashboardProps) {
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-2">
           {/* Pet Image */}
           <div className="flex justify-center">
             <img
@@ -152,7 +199,7 @@ export default function PetComponent({ pet }: PetDashboardProps) {
           </div>
 
           {/* Game & Stats Data */}
-          <div className="space-y-3">
+          <div className="space-y-1">
             <div className="flex justify-between items-center text-lg">
               <Tooltip>
                 <TooltipTrigger className="flex items-center gap-2">
@@ -270,5 +317,5 @@ export default function PetComponent({ pet }: PetDashboardProps) {
         />
       </Card>
     </TooltipProvider>
-  );
+  )
 }

@@ -2,8 +2,8 @@
 module 0x0::tamagosui_tests;
 
 use std::string;
-use sui::{clock::{Self, Clock}, test_scenario::{Self, Scenario}};
-use 0x0::tamagosui;
+use sui::test_scenario::Scenario;
+use sui::clock::Clock;
 
 const USER: address = @0xDEAD;
 
@@ -33,8 +33,8 @@ fun setup_pet(scenario: &mut Scenario) {
     // Check pet was created correctly
     scenario.next_tx(USER);
     {
-        let pet = scenario.take_from_sender<tamagosui::Pet>();
-        assert!(tamagosui::get_pet_name(&pet) == string::utf8(b"Fluffy"), 1);
+        let pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
+        assert!(0x0::tamagosui::get_pet_name(&pet) == string::utf8(b"Fluffy"), 1);
         scenario.return_to_sender(pet);
     };
 }
@@ -47,7 +47,7 @@ fun test_adopt_pet() {
     // Check pet fields
     scenario.next_tx(USER);
     {
-        let pet = scenario.take_from_sender<tamagosui::Pet>();
+        let pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         assert!(pet.get_pet_name() == string::utf8(b"Fluffy"), 1);
         assert!(pet.get_pet_adopted_at() == 100_000_000, 2);
         assert!(pet.get_pet_coins() == 20, 3);
@@ -69,7 +69,7 @@ fun test_feed_pet() {
 
     scenario.next_tx(USER);
     {
-        let mut pet = scenario.take_from_sender<tamagosui::Pet>();
+        let mut pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         // Check initial stats
         assert!(pet.get_pet_hunger() == 40, 1);
         assert!(pet.get_pet_coins() == 20, 2);
@@ -81,7 +81,7 @@ fun test_feed_pet() {
 
     scenario.next_tx(USER);
     {
-        let pet = scenario.take_from_sender<tamagosui::Pet>();
+        let pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         // Check stats after feeding
         assert!(pet.get_pet_hunger() == 60, 4);
         assert!(pet.get_pet_coins() == 15, 5);
@@ -98,7 +98,7 @@ fun test_play_with_pet() {
 
     scenario.next_tx(USER);
     {
-        let mut pet = scenario.take_from_sender<tamagosui::Pet>();
+        let mut pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         // Check initial stats
         assert!(pet.get_pet_energy() == 60, 1);
         assert!(pet.get_pet_hunger() == 40, 2);
@@ -112,7 +112,7 @@ fun test_play_with_pet() {
     scenario.next_tx(USER);
     {
         // Check stats after playing
-        let pet = scenario.take_from_sender<tamagosui::Pet>();
+        let pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         assert!(pet.get_pet_energy() == 45, 5);
         assert!(pet.get_pet_hunger() == 25, 6);
         assert!(pet.get_pet_experience() == 10, 7);
@@ -129,7 +129,7 @@ fun test_pet_works() {
 
     scenario.next_tx(USER);
     {
-        let mut pet = scenario.take_from_sender<tamagosui::Pet>();
+        let mut pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         // Check initial stats
         assert!(pet.get_pet_energy() == 60, 1);
         assert!(pet.get_pet_hunger() == 40, 2);
@@ -144,7 +144,7 @@ fun test_pet_works() {
     scenario.next_tx(USER);
     {
         // Check stats after working
-        let pet = scenario.take_from_sender<tamagosui::Pet>();
+        let pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         assert!(pet.get_pet_energy() == 40, 5);
         assert!(pet.get_pet_hunger() == 20, 7);
         assert!(pet.get_pet_happiness() == 30, 8);
@@ -164,10 +164,10 @@ fun test_feed_pet_while_sleeping_should_fail() {
     // Put pet to sleep first
     scenario.next_tx(USER);
     {
-        let mut pet = scenario.take_from_sender<tamagosui::Pet>();
+        let mut pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         let clock = scenario.take_shared<Clock>();
         tamagosui::let_pet_sleep(&mut pet, &clock);
-        assert!(tamagosui::is_sleeping(&pet), 1);
+        assert!(0x0::tamagosui::is_sleeping(&pet), 1);
 
         test_scenario::return_shared(clock);
         scenario.return_to_sender(pet);
@@ -176,7 +176,7 @@ fun test_feed_pet_while_sleeping_should_fail() {
     // Try to feed pet while sleeping - should fail
     scenario.next_tx(USER);
     {
-        let mut pet = scenario.take_from_sender<tamagosui::Pet>();
+        let mut pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         tamagosui::feed_pet(&mut pet); // This should abort with E_PET_IS_ASLEEP
         scenario.return_to_sender(pet);
     };
@@ -193,10 +193,10 @@ fun test_let_pet_sleep_when_already_sleeping_should_fail() {
     // Put pet to sleep first
     scenario.next_tx(USER);
     {
-        let mut pet = scenario.take_from_sender<tamagosui::Pet>();
+        let mut pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         let clock = scenario.take_shared<Clock>();
         tamagosui::let_pet_sleep(&mut pet, &clock);
-        assert!(tamagosui::is_sleeping(&pet), 1);
+        assert!(0x0::tamagosui::is_sleeping(&pet), 1);
         test_scenario::return_shared(clock);
         scenario.return_to_sender(pet);
     };
@@ -204,7 +204,7 @@ fun test_let_pet_sleep_when_already_sleeping_should_fail() {
     // Try to put pet to sleep again - should fail
     scenario.next_tx(USER);
     {
-        let mut pet = scenario.take_from_sender<tamagosui::Pet>();
+        let mut pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         let clock = scenario.take_shared<Clock>();
         tamagosui::let_pet_sleep(&mut pet, &clock); // This should abort with E_PET_IS_ALREADY_ASLEEP
         test_scenario::return_shared(clock);
@@ -227,7 +227,7 @@ fun test_wake_up_pet_calculates_stats_correctly() {
     // Put pet to sleep and record initial stats
     scenario.next_tx(USER);
     {
-        let mut pet = scenario.take_from_sender<tamagosui::Pet>();
+        let mut pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         let clock = scenario.take_shared<Clock>();
         
         initial_energy = pet.get_pet_energy();
@@ -235,7 +235,7 @@ fun test_wake_up_pet_calculates_stats_correctly() {
         initial_hunger = pet.get_pet_hunger();
         
         tamagosui::let_pet_sleep(&mut pet, &clock);
-        assert!(tamagosui::is_sleeping(&pet), 1);
+        assert!(0x0::tamagosui::is_sleeping(&pet), 1);
         test_scenario::return_shared(clock);
         scenario.return_to_sender(pet);
     };
@@ -243,14 +243,14 @@ fun test_wake_up_pet_calculates_stats_correctly() {
     // Fast forward time and wake up pet
     scenario.next_tx(USER);
     {
-        let mut pet = scenario.take_from_sender<tamagosui::Pet>();
+        let mut pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         let mut clock = scenario.take_shared<Clock>();
         
         // Fast forward 10 seconds (10,000 ms)
         clock.increment_for_testing(10_000);
         
         tamagosui::wake_up_pet(&mut pet, &clock);
-        assert!(!tamagosui::is_sleeping(&pet), 2);
+        assert!(!0x0::tamagosui::is_sleeping(&pet), 2);
         
         // Check that stats changed correctly after sleep
         // Energy should have increased (1 per second = 10 energy)
@@ -280,7 +280,7 @@ fun test_level_up_without_enough_experience_should_fail() {
 
     scenario.next_tx(USER);
     {
-        let mut pet = scenario.take_from_sender<tamagosui::Pet>();
+        let mut pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         // Try to level up with only initial 0 experience
         assert!(pet.get_pet_experience() == 0, 1);
         assert!(pet.get_pet_level() == 1, 2);
@@ -306,7 +306,7 @@ fun test_mint_accessory() {
     scenario.next_tx(USER);
     {
         // Check accessory was created
-        let accessory = scenario.take_from_sender<tamagosui::PetAccessory>();
+        let accessory = scenario.take_from_sender<0x0::tamagosui::PetAccessory>();
         // Note: We can't directly check accessory fields as they don't have getter functions
         // But if we can take it from sender, it means it was successfully minted
         scenario.return_to_sender(accessory);
@@ -329,11 +329,11 @@ fun test_equip_accessory() {
     // Equip the accessory
     scenario.next_tx(USER);
     {
-        let mut pet = scenario.take_from_sender<tamagosui::Pet>();
-        let accessory = scenario.take_from_sender<tamagosui::PetAccessory>();
+        let mut pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
+        let accessory = scenario.take_from_sender<0x0::tamagosui::PetAccessory>();
         
         // Check pet doesn't have accessory initially
-        assert!(!tamagosui::is_sleeping(&pet), 1); // Pet should be awake to equip
+        assert!(!0x0::tamagosui::is_sleeping(&pet), 1); // Pet should be awake to equip
         
         tamagosui::equip_accessory(&mut pet, accessory);
         scenario.return_to_sender(pet);
@@ -342,7 +342,7 @@ fun test_equip_accessory() {
     // Check accessory is no longer in sender's possession (it's now part of the pet)
     scenario.next_tx(USER);
     {
-        let pet = scenario.take_from_sender<tamagosui::Pet>();
+        let pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         // We can't directly check if accessory is equipped without additional getter functions
         // But the fact that equip_accessory didn't fail means it worked
         scenario.return_to_sender(pet);
@@ -364,8 +364,8 @@ fun test_unequip_accessory() {
 
     scenario.next_tx(USER);
     {
-        let mut pet = scenario.take_from_sender<tamagosui::Pet>();
-        let accessory = scenario.take_from_sender<tamagosui::PetAccessory>();
+        let mut pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
+        let accessory = scenario.take_from_sender<0x0::tamagosui::PetAccessory>();
         tamagosui::equip_accessory(&mut pet, accessory);
         scenario.return_to_sender(pet);
     };
@@ -373,7 +373,7 @@ fun test_unequip_accessory() {
     // Now unequip the accessory
     scenario.next_tx(USER);
     {
-        let mut pet = scenario.take_from_sender<tamagosui::Pet>();
+        let mut pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
         tamagosui::unequip_accessory(&mut pet, scenario.ctx());
         scenario.return_to_sender(pet);
     };
@@ -381,8 +381,8 @@ fun test_unequip_accessory() {
     // Check accessory is back in sender's possession
     scenario.next_tx(USER);
     {
-        let pet = scenario.take_from_sender<tamagosui::Pet>();
-        let accessory = scenario.take_from_sender<tamagosui::PetAccessory>();
+        let pet = scenario.take_from_sender<0x0::tamagosui::Pet>();
+        let accessory = scenario.take_from_sender<0x0::tamagosui::PetAccessory>();
         // If we can take both pet and accessory, unequip worked correctly
         scenario.return_to_sender(pet);
         scenario.return_to_sender(accessory);

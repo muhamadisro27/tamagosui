@@ -1,30 +1,60 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Dispatch, SetStateAction, useState } from "react"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { useMutateAdoptPet } from "@/hooks/useMutateAdoptPet";
-import { Loader2Icon } from "lucide-react";
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { useMutateAdoptPet } from "@/hooks/useMutateAdoptPet"
+import { Loader2Icon } from "lucide-react"
+import { cn } from "@/lib/utils"
+
+type AdoptComponentProps = {
+  showAddNewAdopt?: boolean
+  setLoading?: Dispatch<SetStateAction<boolean>>
+  setShowAddNewAdopt?: Dispatch<SetStateAction<boolean>>
+  setIsSuccess?: Dispatch<SetStateAction<boolean>>
+}
 
 const INTIAAL_PET_IMAGE_URL =
-  "https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreidkhjpthergw2tcg6u5r344shgi2cdg5afmhgpf5bv34vqfrr7hni";
+  "https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreidkhjpthergw2tcg6u5r344shgi2cdg5afmhgpf5bv34vqfrr7hni"
 
-export default function AdoptComponent() {
-  const [petName, setPetName] = useState("");
-  const { mutate: mutateAdoptPet, isPending: isAdopting } = useMutateAdoptPet();
+export default function AdoptComponent({
+  showAddNewAdopt,
+  setShowAddNewAdopt,
+  setLoading,
+  setIsSuccess,
+}: AdoptComponentProps) {
+  const [petName, setPetName] = useState("")
+  const { mutate: mutateAdoptPet, isPending: isAdopting } = useMutateAdoptPet()
 
   const handleAdoptPet = () => {
-    if (!petName.trim()) return;
-    mutateAdoptPet({ name: petName });
-  };
+    setLoading?.(true)
+    if (!petName.trim()) return
+    mutateAdoptPet(
+      { name: petName },
+      {
+        onSuccess: () => {
+          setIsSuccess?.(true)
+        },
+        onSettled: () => {
+          setLoading?.(false)
+          setShowAddNewAdopt?.(false)
+        },
+      }
+    )
+  }
 
   return (
-    <Card className="w-full max-w-sm text-center shadow-hard border-2 border-primary">
+    <Card
+      className={cn(
+        "w-full max-w-sm text-center shadow-hard border-2 border-primary",
+        showAddNewAdopt && "h-[800px]"
+      )}
+    >
       <CardHeader>
         <CardTitle className="text-3xl">ADOPT YOUR PET</CardTitle>
         <CardDescription>A new friend awaits!</CardDescription>
@@ -43,6 +73,7 @@ export default function AdoptComponent() {
           <Input
             value={petName}
             onChange={(e) => setPetName(e.target.value)}
+            autoFocus={showAddNewAdopt}
             placeholder="Enter pet's name"
             disabled={isAdopting}
             className="text-center text-lg border-2 border-primary focus:ring-2 focus:ring-offset-2 focus:ring-ring"
@@ -53,7 +84,7 @@ export default function AdoptComponent() {
           <Button
             onClick={handleAdoptPet}
             disabled={!petName.trim() || isAdopting}
-            className="w-full text-lg py-6 border-2 border-primary shadow-hard-sm hover:translate-x-0.5 hover:translate-y-0.5"
+            className="w-full text-lg py-6 border-2 border-primary cursor-pointer shadow-hard-sm hover:translate-x-0.5 hover:translate-y-0.5"
           >
             {isAdopting ? (
               <>
@@ -67,5 +98,5 @@ export default function AdoptComponent() {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

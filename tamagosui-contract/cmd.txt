@@ -1,0 +1,6 @@
+
+
+sui client ptb \
+   --move-call 0x652138690a25321e05fc3b28cacca9895abc5ef60a7238365596c19dbacb992e::tamagosui::adopt_pet \
+   '"New Adopted"' \
+   @0x6

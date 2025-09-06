@@ -1,7 +1,11 @@
 module 0x0::tamagosui;
 
 use std::string::{Self, String};
-use sui::{clock::Clock, display, dynamic_field, event, package};
+use sui::clock::Clock;
+use sui::dynamic_field;
+use sui::event;
+use sui::display;
+use sui::package;
 
 // === Errors ===
 const E_NOT_ENOUGH_COINS: u64 = 101;
@@ -172,7 +176,7 @@ fun init(witness: TAMAGOSUI, ctx: &mut TxContext) {
     transfer::public_transfer(publisher, ctx.sender());
 }
 
-public entry fun adopt_pet(
+entry fun adopt_pet(
     name: String,
     clock: &Clock,
     ctx: &mut TxContext
@@ -203,7 +207,7 @@ public entry fun adopt_pet(
     let pet_id = object::id(&pet);
 
     event::emit(PetAdopted {
-        pet_id: pet_id,
+        pet_id,
         name: pet.name,
         adopted_at: pet.adopted_at
     });
@@ -211,7 +215,7 @@ public entry fun adopt_pet(
     transfer::public_transfer(pet, ctx.sender());
 }
 
-public entry fun feed_pet(pet: &mut Pet) {
+entry fun feed_pet(pet: &mut Pet) {
     assert!(!is_sleeping(pet), E_PET_IS_ASLEEP);
 
     let gb = get_game_balance();
@@ -229,7 +233,7 @@ public entry fun feed_pet(pet: &mut Pet) {
     emit_action(pet, b"fed");
 }
 
-public entry fun play_with_pet(pet: &mut Pet) {
+entry fun play_with_pet(pet: &mut Pet) {
     assert!(!is_sleeping(pet), E_PET_IS_ASLEEP);
 
     let gb = get_game_balance();
@@ -247,7 +251,7 @@ public entry fun play_with_pet(pet: &mut Pet) {
     emit_action(pet, b"played");
 }
 
-public entry fun work_for_coins(pet: &mut Pet) {
+entry fun work_for_coins(pet: &mut Pet) {
     assert!(!is_sleeping(pet), E_PET_IS_ASLEEP);
 
     let gb = get_game_balance();
@@ -274,7 +278,7 @@ public entry fun work_for_coins(pet: &mut Pet) {
     emit_action(pet, b"worked");
 }
 
-public entry fun let_pet_sleep(pet: &mut Pet, clock: &Clock) {
+entry fun let_pet_sleep(pet: &mut Pet, clock: &Clock) {
     assert!(!is_sleeping(pet), E_PET_IS_ALREADY_ASLEEP);
 
     let key = string::utf8(SLEEP_STARTED_AT_KEY);
@@ -285,7 +289,7 @@ public entry fun let_pet_sleep(pet: &mut Pet, clock: &Clock) {
     emit_action(pet, b"started_sleeping");
 }
 
-public entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
+entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
     assert!(is_sleeping(pet), E_PET_IS_ASLEEP);
     
     let key = string::utf8(SLEEP_STARTED_AT_KEY);
@@ -328,7 +332,7 @@ public entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
 }
 
 
-public entry fun check_and_level_up(pet: &mut Pet) {
+entry fun check_and_level_up(pet: &mut Pet) {
     assert!(!is_sleeping(pet), E_PET_IS_ASLEEP);
 
     let gb = get_game_balance();
@@ -347,7 +351,7 @@ public entry fun check_and_level_up(pet: &mut Pet) {
     emit_action(pet, b"leveled_up")
 }
 
-public entry fun mint_accessory(ctx: &mut TxContext) {
+entry fun mint_accessory(ctx: &mut TxContext) {
     let accessory = PetAccessory {
         id: object::new(ctx),
         name: string::utf8(b"cool glasses"),
@@ -356,7 +360,7 @@ public entry fun mint_accessory(ctx: &mut TxContext) {
     transfer::public_transfer(accessory, ctx.sender());
 }
 
-public entry fun equip_accessory(pet: &mut Pet, accessory: PetAccessory) {
+entry fun equip_accessory(pet: &mut Pet, accessory: PetAccessory) {
     assert!(!is_sleeping(pet), E_PET_IS_ASLEEP);
 
     let key = string::utf8(EQUIPPED_ITEM_KEY);
@@ -369,7 +373,7 @@ public entry fun equip_accessory(pet: &mut Pet, accessory: PetAccessory) {
     emit_action(pet, b"equipped_item");
 }
 
-public entry fun unequip_accessory(pet: &mut Pet, ctx: &mut TxContext) {
+entry fun unequip_accessory(pet: &mut Pet, ctx: &mut TxContext) {
     assert!(!is_sleeping(pet), E_PET_IS_ASLEEP);
 
     let key = string::utf8(EQUIPPED_ITEM_KEY);
