@@ -4,6 +4,7 @@ module 0x0::tamagosui_tests;
 use std::string;
 use sui::test_scenario::Scenario;
 use sui::clock::Clock;
+use sui::test_scenario;
 
 const USER: address = @0xDEAD;
 
@@ -389,4 +390,19 @@ fun test_unequip_accessory() {
     };
 
     scenario.end();
+}
+
+#[test]
+fun test_remove_pet_adopted() {
+    let mut scenario = test_scenario::begin(USER);
+    setup_pet(&mut scenario);
+
+    test_scenario::next_tx(&mut scenario, USER);
+    {
+        let pet = test_scenario::take_from_sender<0x0::tamagosui::Pet>(&scenario);
+
+        pet.remove_pet_adopted();
+    };
+
+    test_scenario::end(scenario);
 }

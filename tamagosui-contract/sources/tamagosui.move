@@ -1,10 +1,12 @@
 module 0x0::tamagosui;
 
 use std::string::{Self, String};
+
 use sui::clock::Clock;
+use sui::display;
 use sui::dynamic_field;
 use sui::event;
-use sui::display;
+use sui::object;
 use sui::package;
 
 // === Errors ===
@@ -19,14 +21,22 @@ const E_PET_IS_ASLEEP: u64 = 108;
 const E_PET_IS_ALREADY_ASLEEP: u64 = 109;
 
 // === Constants ===
-const PET_LEVEL_1_IMAGE_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreidkhjpthergw2tcg6u5r344shgi2cdg5afmhgpf5bv34vqfrr7hni";
-const PET_LEVEL_1_IMAGE_WITH_GLASSES_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreibizappmcjaq5a5metl27yc46co4kxewigq6zu22vovwvn5qfsbiu";
-const PET_LEVEL_2_IMAGE_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreia5tgsowzfu6mzjfcxagfpbkghfuho6y5ybetxh3wabwrc5ajmlpq";
-const PET_LEVEL_2_IMAGE_WITH_GLASSES_URL:vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreif5bkpnqyybq3aqgafqm72x4wfjwcuxk33vvykx44weqzuilop424";
-const PET_LEVEL_3_IMAGE_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreidnqerfwxuxkrdsztgflmg5jwuespdkrazl6qmk7ykfgmrfzvinoy";
-const PET_LEVEL_3_IMAGE_WITH_GLASSES_URL:vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreigs6r3rdupoji7pqmpwe76z7wysguzdlq43t3wqmzi2654ux5n6uu";
-const PET_SLEEP_IMAGE_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreihwofl5stihtzjixfhrtznd7zqkclfhmlshgsg7cbszzjqqpvf7ae";
-const ACCESSORY_GLASSES_IMAGE_URL: vector<u8> = b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreigyivmq45od3jkryryi3w6t5j65hcnfh5kgwpi2ex7llf2i6se7de";
+const PET_LEVEL_1_IMAGE_URL: vector<u8> =
+    b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreidkhjpthergw2tcg6u5r344shgi2cdg5afmhgpf5bv34vqfrr7hni";
+const PET_LEVEL_1_IMAGE_WITH_GLASSES_URL: vector<u8> =
+    b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreibizappmcjaq5a5metl27yc46co4kxewigq6zu22vovwvn5qfsbiu";
+const PET_LEVEL_2_IMAGE_URL: vector<u8> =
+    b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreia5tgsowzfu6mzjfcxagfpbkghfuho6y5ybetxh3wabwrc5ajmlpq";
+const PET_LEVEL_2_IMAGE_WITH_GLASSES_URL: vector<u8> =
+    b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreif5bkpnqyybq3aqgafqm72x4wfjwcuxk33vvykx44weqzuilop424";
+const PET_LEVEL_3_IMAGE_URL: vector<u8> =
+    b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreidnqerfwxuxkrdsztgflmg5jwuespdkrazl6qmk7ykfgmrfzvinoy";
+const PET_LEVEL_3_IMAGE_WITH_GLASSES_URL: vector<u8> =
+    b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreigs6r3rdupoji7pqmpwe76z7wysguzdlq43t3wqmzi2654ux5n6uu";
+const PET_SLEEP_IMAGE_URL: vector<u8> =
+    b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreihwofl5stihtzjixfhrtznd7zqkclfhmlshgsg7cbszzjqqpvf7ae";
+const ACCESSORY_GLASSES_IMAGE_URL: vector<u8> =
+    b"https://tan-kind-lizard-741.mypinata.cloud/ipfs/bafkreigyivmq45od3jkryryi3w6t5j65hcnfh5kgwpi2ex7llf2i6se7de";
 
 const EQUIPPED_ITEM_KEY: vector<u8> = b"equipped_item";
 const SLEEP_STARTED_AT_KEY: vector<u8> = b"sleep_started_at";
@@ -34,30 +44,25 @@ const SLEEP_STARTED_AT_KEY: vector<u8> = b"sleep_started_at";
 // === Game Balance ===
 public struct GameBalance has copy, drop {
     max_stat: u8,
-    
     // Feed settings
     feed_coins_cost: u64,
     feed_experience_gain: u64,
     feed_hunger_gain: u8,
-    
     // Play settings
     play_energy_loss: u8,
     play_hunger_loss: u8,
     play_experience_gain: u64,
     play_happiness_gain: u8,
-    
     // Work settings
     work_energy_loss: u8,
     work_happiness_loss: u8,
     work_hunger_loss: u8,
     work_coins_gain: u64,
     work_experience_gain: u64,
-    
     // Sleep settings (in milliseconds)
     sleep_energy_gain_ms: u64,
     sleep_happiness_loss_ms: u64,
     sleep_hunger_loss_ms: u64,
-
     // Level settings
     exp_per_level: u64,
 }
@@ -65,30 +70,25 @@ public struct GameBalance has copy, drop {
 fun get_game_balance(): GameBalance {
     GameBalance {
         max_stat: 100,
-        
         // Feed
         feed_coins_cost: 5,
         feed_experience_gain: 5,
         feed_hunger_gain: 20,
-        
         // Play
         play_energy_loss: 15,
         play_hunger_loss: 15,
         play_experience_gain: 10,
         play_happiness_gain: 25,
-        
         // Work
         work_energy_loss: 20,
         work_hunger_loss: 20,
         work_happiness_loss: 20,
         work_coins_gain: 10,
         work_experience_gain: 15,
-
         // Sleep (rates per millisecond)
-        sleep_energy_gain_ms: 1000,    // 1 energy per second
+        sleep_energy_gain_ms: 1000, // 1 energy per second
         sleep_happiness_loss_ms: 700, // 1 happiness loss per 0.7 seconds
-        sleep_hunger_loss_ms: 500,    // 1 hunger loss per 0.5 seconds
-        
+        sleep_hunger_loss_ms: 500, // 1 hunger loss per 0.5 seconds
         // Level
         exp_per_level: 100,
     }
@@ -108,7 +108,7 @@ public struct Pet has key, store {
 public struct PetAccessory has key, store {
     id: UID,
     name: String,
-    image_url: String
+    image_url: String,
 }
 
 public struct PetStats has store {
@@ -128,14 +128,15 @@ public struct PetGameData has store {
 public struct PetAdopted has copy, drop {
     pet_id: ID,
     name: String,
-    adopted_at: u64
+    adopted_at: u64,
 }
+
 public struct PetAction has copy, drop {
     pet_id: ID,
     action: String,
     energy: u8,
     happiness: u8,
-    hunger: u8
+    hunger: u8,
 }
 
 fun init(witness: TAMAGOSUI, ctx: &mut TxContext) {
@@ -161,26 +162,21 @@ fun init(witness: TAMAGOSUI, ctx: &mut TxContext) {
     pet_display.update_version();
     transfer::public_transfer(pet_display, ctx.sender());
 
-    let accessory_keys = vector[
-        string::utf8(b"name"),
-        string::utf8(b"image_url")
-    ];
-    let accessory_values = vector[
-        string::utf8(b"{name}"),
-        string::utf8(b"{image_url}")
-    ];
-    let mut accessory_display = display::new_with_fields<PetAccessory>(&publisher, accessory_keys, accessory_values, ctx);
+    let accessory_keys = vector[string::utf8(b"name"), string::utf8(b"image_url")];
+    let accessory_values = vector[string::utf8(b"{name}"), string::utf8(b"{image_url}")];
+    let mut accessory_display = display::new_with_fields<PetAccessory>(
+        &publisher,
+        accessory_keys,
+        accessory_values,
+        ctx,
+    );
     accessory_display.update_version();
     transfer::public_transfer(accessory_display, ctx.sender());
 
     transfer::public_transfer(publisher, ctx.sender());
 }
 
-entry fun adopt_pet(
-    name: String,
-    clock: &Clock,
-    ctx: &mut TxContext
-) {
+entry fun adopt_pet(name: String, clock: &Clock, ctx: &mut TxContext) {
     let current_time = clock.timestamp_ms();
 
     let pet_stats = PetStats {
@@ -192,7 +188,7 @@ entry fun adopt_pet(
     let pet_game_data = PetGameData {
         coins: 20,
         experience: 0,
-        level: 1
+        level: 1,
     };
 
     let pet = Pet {
@@ -201,7 +197,7 @@ entry fun adopt_pet(
         image_url: string::utf8(PET_LEVEL_1_IMAGE_URL),
         adopted_at: current_time,
         stats: pet_stats,
-        game_data: pet_game_data
+        game_data: pet_game_data,
     };
 
     let pet_id = object::id(&pet);
@@ -209,7 +205,7 @@ entry fun adopt_pet(
     event::emit(PetAdopted {
         pet_id,
         name: pet.name,
-        adopted_at: pet.adopted_at
+        adopted_at: pet.adopted_at,
     });
 
     transfer::public_transfer(pet, ctx.sender());
@@ -225,10 +221,8 @@ entry fun feed_pet(pet: &mut Pet) {
 
     pet.game_data.coins = pet.game_data.coins - gb.feed_coins_cost;
     pet.game_data.experience = pet.game_data.experience + gb.feed_experience_gain;
-    pet.stats.hunger = if (pet.stats.hunger + gb.feed_hunger_gain > gb.max_stat)
-        gb.max_stat 
-    else 
-        pet.stats.hunger + gb.feed_hunger_gain;
+    pet.stats.hunger = if (pet.stats.hunger + gb.feed_hunger_gain > gb.max_stat) gb.max_stat
+    else pet.stats.hunger + gb.feed_hunger_gain;
 
     emit_action(pet, b"fed");
 }
@@ -243,10 +237,8 @@ entry fun play_with_pet(pet: &mut Pet) {
     pet.stats.energy = pet.stats.energy - gb.play_energy_loss;
     pet.stats.hunger = pet.stats.hunger - gb.play_hunger_loss;
     pet.game_data.experience = pet.game_data.experience + gb.play_experience_gain;
-    pet.stats.happiness = if (pet.stats.happiness + gb.play_happiness_gain > gb.max_stat) 
-        gb.max_stat 
-    else 
-        pet.stats.happiness + gb.play_happiness_gain;
+    pet.stats.happiness = if (pet.stats.happiness + gb.play_happiness_gain > gb.max_stat)
+        gb.max_stat else pet.stats.happiness + gb.play_happiness_gain;
 
     emit_action(pet, b"played");
 }
@@ -259,19 +251,13 @@ entry fun work_for_coins(pet: &mut Pet) {
     assert!(pet.stats.energy >= gb.work_energy_loss, E_PET_TOO_TIRED);
     assert!(pet.stats.happiness >= gb.work_happiness_loss, E_PET_NOT_HUNGRY);
     assert!(pet.stats.hunger >= gb.work_hunger_loss, E_PET_TOO_HUNGRY);
-    
+
     pet.stats.energy = if (pet.stats.energy >= gb.work_energy_loss)
-        pet.stats.energy - gb.work_energy_loss
-    else 
-        0;
+        pet.stats.energy - gb.work_energy_loss else 0;
     pet.stats.happiness = if (pet.stats.happiness >= gb.work_happiness_loss)
-        pet.stats.happiness - gb.work_happiness_loss
-    else 
-        0;
+        pet.stats.happiness - gb.work_happiness_loss else 0;
     pet.stats.hunger = if (pet.stats.hunger >= gb.work_hunger_loss)
-        pet.stats.hunger - gb.work_hunger_loss
-    else 
-        0;
+        pet.stats.hunger - gb.work_hunger_loss else 0;
     pet.game_data.coins = pet.game_data.coins + gb.work_coins_gain;
     pet.game_data.experience = pet.game_data.experience + gb.work_experience_gain;
 
@@ -291,7 +277,7 @@ entry fun let_pet_sleep(pet: &mut Pet, clock: &Clock) {
 
 entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
     assert!(is_sleeping(pet), E_PET_IS_ASLEEP);
-    
+
     let key = string::utf8(SLEEP_STARTED_AT_KEY);
     let sleep_started_at: u64 = dynamic_field::remove<String, u64>(&mut pet.id, key);
     let duration_ms = clock.timestamp_ms() - sleep_started_at;
@@ -302,11 +288,12 @@ entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
     let energy_gained_u64 = duration_ms / gb.sleep_energy_gain_ms;
     // Cap energy gain to max_stat
     let energy_gained = if (energy_gained_u64 > (gb.max_stat as u64)) {
-        gb.max_stat 
+        gb.max_stat
     } else {
         (energy_gained_u64 as u8)
     };
-    pet.stats.energy = if (pet.stats.energy + energy_gained > gb.max_stat) gb.max_stat else pet.stats.energy + energy_gained;
+    pet.stats.energy = if (pet.stats.energy + energy_gained > gb.max_stat) gb.max_stat
+    else pet.stats.energy + energy_gained;
 
     // Calculate happiness lost
     let happiness_lost_u64 = duration_ms / gb.sleep_happiness_loss_ms;
@@ -315,7 +302,8 @@ entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
     } else {
         (happiness_lost_u64 as u8)
     };
-    pet.stats.happiness = if (pet.stats.happiness > happiness_lost) pet.stats.happiness - happiness_lost else 0;
+    pet.stats.happiness = if (pet.stats.happiness > happiness_lost)
+        pet.stats.happiness - happiness_lost else 0;
 
     // Calculate hunger lost
     let hunger_lost_u64 = duration_ms / gb.sleep_hunger_loss_ms;
@@ -331,7 +319,6 @@ entry fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
     emit_action(pet, b"woke_up");
 }
 
-
 entry fun check_and_level_up(pet: &mut Pet) {
     assert!(!is_sleeping(pet), E_PET_IS_ASLEEP);
 
@@ -344,7 +331,7 @@ entry fun check_and_level_up(pet: &mut Pet) {
     // Level up
     pet.game_data.level = pet.game_data.level + 1;
     pet.game_data.experience = pet.game_data.experience - required_exp;
-    
+
     // Update image based on level and equipped accessory
     update_pet_image(pet);
 
@@ -355,7 +342,7 @@ entry fun mint_accessory(ctx: &mut TxContext) {
     let accessory = PetAccessory {
         id: object::new(ctx),
         name: string::utf8(b"cool glasses"),
-        image_url: string::utf8(ACCESSORY_GLASSES_IMAGE_URL)
+        image_url: string::utf8(ACCESSORY_GLASSES_IMAGE_URL),
     };
     transfer::public_transfer(accessory, ctx.sender());
 }
@@ -373,7 +360,7 @@ entry fun equip_accessory(pet: &mut Pet, accessory: PetAccessory) {
     emit_action(pet, b"equipped_item");
 }
 
-entry fun unequip_accessory(pet: &mut Pet, ctx: &mut TxContext) {
+entry fun unequip_accessory(pet: &mut Pet, ctx: &TxContext) {
     assert!(!is_sleeping(pet), E_PET_IS_ASLEEP);
 
     let key = string::utf8(EQUIPPED_ITEM_KEY);
@@ -387,6 +374,23 @@ entry fun unequip_accessory(pet: &mut Pet, ctx: &mut TxContext) {
     transfer::transfer(accessory, ctx.sender());
     emit_action(pet, b"unequipped_item");
 }
+
+entry fun remove_pet_adopted(self: Pet) {
+    let Pet {
+        id,
+        name: _,
+        image_url: _,
+        adopted_at: _,
+        stats,
+        game_data,
+    } = self;
+
+    let PetStats { energy: _, happiness: _, hunger: _ } = stats;
+    let PetGameData { coins: _, experience: _, level: _ } = game_data;
+
+    object::delete(id);
+}
+
 
 // === Helper Functions ===
 fun emit_action(pet: &Pet, action: vector<u8>) {
@@ -402,7 +406,7 @@ fun emit_action(pet: &Pet, action: vector<u8>) {
 fun update_pet_image(pet: &mut Pet) {
     let key = string::utf8(EQUIPPED_ITEM_KEY);
     let has_accessory = dynamic_field::exists_<String>(&pet.id, key);
-    
+
     if (pet.game_data.level == 1) {
         if (has_accessory) {
             pet.image_url = string::utf8(PET_LEVEL_1_IMAGE_WITH_GLASSES_URL);
@@ -426,17 +430,25 @@ fun update_pet_image(pet: &mut Pet) {
 
 // === View Functions ===
 public fun get_pet_name(pet: &Pet): String { pet.name }
+
 public fun get_pet_adopted_at(pet: &Pet): u64 { pet.adopted_at }
+
 public fun get_pet_coins(pet: &Pet): u64 { pet.game_data.coins }
+
 public fun get_pet_experience(pet: &Pet): u64 { pet.game_data.experience }
+
 public fun get_pet_level(pet: &Pet): u8 { pet.game_data.level }
+
 public fun get_pet_energy(pet: &Pet): u8 { pet.stats.energy }
+
 public fun get_pet_hunger(pet: &Pet): u8 { pet.stats.hunger }
+
 public fun get_pet_happiness(pet: &Pet): u8 { pet.stats.happiness }
 
 public fun get_pet_stats(pet: &Pet): (u8, u8, u8) {
     (pet.stats.energy, pet.stats.hunger, pet.stats.happiness)
 }
+
 public fun get_pet_game_data(pet: &Pet): (u64, u64, u8) {
     (pet.game_data.coins, pet.game_data.experience, pet.game_data.level)
 }

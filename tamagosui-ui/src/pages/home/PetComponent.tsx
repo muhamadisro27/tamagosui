@@ -11,6 +11,7 @@ import {
   BriefcaseIcon,
   ZapIcon,
   ChevronUpIcon,
+  Trash2,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -42,6 +43,7 @@ import { useQueryGameBalance } from "@/hooks/useQueryGameBalance"
 
 import type { PetStruct } from "@/types/Pet"
 import Skeleton from "@/components/skeleton"
+import { useMutateRemovePet } from "@/hooks/useMutateRemovePet"
 
 type PetDashboardProps = {
   pet: PetStruct
@@ -56,6 +58,8 @@ export default function PetComponent({ pet }: PetDashboardProps) {
 
   // --- Hooks for Main Pet Actions ---
   const { mutate: mutateFeedPet, isPending: isFeeding } = useMutateFeedPet()
+  const { mutate: mutateRemovePet, isPending: isRemoving } =
+    useMutateRemovePet()
   const { mutate: mutatePlayWithPet, isPending: isPlaying } =
     useMutatePlayWithPet()
   const { mutate: mutateWorkForCoins, isPending: isWorking } =
@@ -157,7 +161,12 @@ export default function PetComponent({ pet }: PetDashboardProps) {
   // --- Client-side UI Logic & Button Disabling ---
   // `isAnyActionPending` prevents the user from sending multiple transactions at once.
   const isAnyActionPending =
-    isFeeding || isPlaying || isSleeping || isWorking || isLevelingUp
+    isFeeding ||
+    isPlaying ||
+    isSleeping ||
+    isWorking ||
+    isLevelingUp ||
+    isRemoving
 
   // These `can...` variables mirror the smart contract's rules (`assert!`) on the client-side.
   const canFeed =
@@ -310,6 +319,14 @@ export default function PetComponent({ pet }: PetDashboardProps) {
               </Button>
             )}
           </div>
+          <ActionButton
+            onClick={() => mutateRemovePet({ id: pet.id })}
+            disabled={!canFeed || isAnyActionPending}
+            isPending={isFeeding}
+            label="Remove Pet"
+            variant={"destructive"}
+            icon={<Trash2 />}
+          />
         </CardContent>
         <WardrobeManager
           pet={pet}
