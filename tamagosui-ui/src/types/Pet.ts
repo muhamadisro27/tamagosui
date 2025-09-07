@@ -29,14 +29,6 @@ export type PetAccessoryStruct = {
   image_url: string
 }
 
-export type SuiWrappedDynamicField<T> = {
-  id: { id: string }
-  name: any
-  value: {
-    fields: T
-  }
-}
-
 export type RawPetStructFields = {
   id: { id: string }
   name: string

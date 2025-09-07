@@ -6,11 +6,11 @@ import { cn } from "@/lib/utils"
 
 // Helper component for action buttons to avoid repetition
 type ActionButtonProps = {
-  onClick: () => void
-  disabled: boolean
-  isPending: boolean
-  label: string
-  icon: ReactNode
+  onClick?: () => void
+  disabled?: boolean
+  isPending?: boolean
+  label?: string
+  icon?: ReactNode
 } & ComponentPropsWithoutRef<typeof Button>
 
 export function ActionButton({

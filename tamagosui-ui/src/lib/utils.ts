@@ -1,11 +1,12 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 
-import type { SuiObjectResponse } from "@mysten/sui/client";
-import type { RawPetStructFields, BasePetStruct } from "@/types/Pet";
+import type { SuiObjectResponse } from "@mysten/sui/client"
+import type { RawPetStructFields, BasePetStruct } from "@/types/Pet"
+import { Guild, GuildRegistry } from "@/types/Guild"
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
 
 export function getSuiObjectFields<T>(object: SuiObjectResponse): T | null {
@@ -15,16 +16,16 @@ export function getSuiObjectFields<T>(object: SuiObjectResponse): T | null {
     object.data.content?.dataType !== "moveObject" ||
     !object.data.content.fields
   )
-    return null;
+    return null
 
-  return object.data.content.fields as T;
+  return object.data.content.fields as T
 }
 
 export function normalizeSuiPetObject(
-  object: SuiObjectResponse,
+  object: SuiObjectResponse
 ): BasePetStruct | null {
-  const fields = getSuiObjectFields<RawPetStructFields>(object);
-  if (!fields) return null;
+  const fields = getSuiObjectFields<RawPetStructFields>(object)
+  if (!fields) return null
 
   return {
     id: fields.id.id,
@@ -41,25 +42,54 @@ export function normalizeSuiPetObject(
       experience: Number(fields.game_data.fields.experience),
       level: fields.game_data.fields.level,
     },
-  } as BasePetStruct;
+  } as BasePetStruct
 }
 
 export function getTimeSinceAdoption(adoptedAt: number) {
-  if (!adoptedAt) return "Just adopted";
+  if (!adoptedAt) return "Just adopted"
 
-  const now = new Date();
-  const adopted = new Date(adoptedAt); // Already milliseconds in Sui
+  const now = new Date()
+  const adopted = new Date(adoptedAt) // Already milliseconds in Sui
 
-  const diff = now.getTime() - adopted.getTime();
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const diff = now.getTime() - adopted.getTime()
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
 
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
+  if (days > 0) return `${days}d ${hours}h`
+  if (hours > 0) return `${hours}h ${minutes}m`
+  return `${minutes}m`
 }
 
 export function getSuiExplorerUrl(type: "tx" | "object", id: string) {
-  return `https://suiscan.xyz/testnet/${type}/${id}`;
+  return `https://suiscan.xyz/testnet/${type}/${id}`
+}
+
+export function normalizeGuildRegistry(
+  data: SuiObjectResponse["data"]
+): GuildRegistry | null {
+  if (!data || !data.content || data.content.dataType !== "moveObject") {
+    return null
+  }
+
+  const fields = data.content.fields as Record<string, any>
+
+  return {
+    id: { id: data.objectId },
+    guild_ids: fields.guild_ids ?? [],
+  }
+}
+
+export function normalizeGuild(data: SuiObjectResponse["data"]): Guild | null {
+  if (!data || !data.content || data.content.dataType !== "moveObject") {
+    return null
+  }
+
+  const fields = data.content.fields as Record<string, any>
+
+  return {
+    id: { id: data.objectId },
+    name: fields.name ?? "",
+    pet_ids: fields.pet_ids ?? [],
+  }
 }

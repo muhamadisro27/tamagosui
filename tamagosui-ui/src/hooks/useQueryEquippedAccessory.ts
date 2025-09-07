@@ -1,53 +1,54 @@
-import { useSuiClient } from "@mysten/dapp-kit";
-import { useQuery } from "@tanstack/react-query";
+import { useSuiClient } from "@mysten/dapp-kit"
+import { useQuery } from "@tanstack/react-query"
 
-import { getSuiObjectFields } from "@/lib/utils";
-import type { SuiWrappedDynamicField, PetAccessoryStruct } from "@/types/Pet";
+import { getSuiObjectFields } from "@/lib/utils"
+import type { PetAccessoryStruct } from "@/types/Pet"
+import type { SuiWrappedDynamicField } from "@/types/common"
 
-export const queryKeyEquippedAccessory = ["owned-equipped-accessory"];
+export const queryKeyEquippedAccessory = ["owned-equipped-accessory"]
 
 type UseQueryEquippedAccessoryParams = {
-  petId?: string;
-};
+  petId?: string
+}
 
 export function useQueryEquippedAccessory({
   petId,
 }: UseQueryEquippedAccessoryParams) {
-  const suiClient = useSuiClient();
+  const suiClient = useSuiClient()
 
   return useQuery({
     queryKey: queryKeyEquippedAccessory,
     queryFn: async () => {
-      if (!petId) return;
+      if (!petId) return
 
       const dynamicFields = await suiClient.getDynamicFields({
         parentId: petId,
-      });
+      })
       const accessoryField = dynamicFields.data.find(
         (field) =>
           field.name.type === "0x1::string::String" &&
-          field.name.value === "equipped_item",
-      );
+          field.name.value === "equipped_item"
+      )
 
-      if (!accessoryField) return null;
+      if (!accessoryField) return null
 
       const fieldObjectResponse = await suiClient.getDynamicFieldObject({
         parentId: petId,
         name: accessoryField.name,
-      });
+      })
 
       const wrappedField =
         getSuiObjectFields<SuiWrappedDynamicField<PetAccessoryStruct>>(
-          fieldObjectResponse,
-        );
+          fieldObjectResponse
+        )
 
       // Return the fields of the accessory if it exists
       if (wrappedField && wrappedField.value && wrappedField.value.fields)
-        return wrappedField.value.fields;
+        return wrappedField.value.fields
 
       // If the pet has no accessory equipped, return null
-      return null;
+      return null
     },
     enabled: !!petId,
-  });
+  })
 }

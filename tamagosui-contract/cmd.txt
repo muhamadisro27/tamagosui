@@ -1,11 +1,27 @@
+VITE_PACKAGE_ID="0x15eef75fe5ecafe5b190e3a1f52be63de3e73c22a950b22a71c2476456a2a366"
+VITE_GUILD_REGISTRY_ID="0x337f53581506fb8b691be77c44c94788ea2b7a6b9f19526008b7643d6013794b"
+VITE_ADMIN_CAP_ID="0x0346f77d651fde19feb3dfa20cd091b104ea57df72bfa607ad23e5b84fe072e5"
 
+GUILD_A = "0xe832db9e80a7b1cab0b0ceabd3bdc33e90fa5ba0177529156442a117d0bb8395"
 
 sui client ptb \
-   --move-call 0xb4a2be982797ed8a0564a15eec287b5ea0e6e63da4f8904179570617d76e1908::tamagosui::adopt_pet \
+   --move-call 0x15eef75fe5ecafe5b190e3a1f52be63de3e73c22a950b22a71c2476456a2a366::tamagosui::adopt_pet \
    '"New Adopted"' \
    @0x6
 
 
 sui client ptb \
-    --move-call 0xb4a2be982797ed8a0564a15eec287b5ea0e6e63da4f8904179570617d76e1908::tamagosui::remove_pet_adopted \
-    @c
+    --move-call 0x15eef75fe5ecafe5b190e3a1f52be63de3e73c22a950b22a71c2476456a2a366::tamagosui::remove_pet_adopted \
+    @0x24617c3cb2006f4d82babf5a57d3a151d49bb1fe4bbad0c93e97601c10f1030a
+
+sui client ptb \
+    --move-call 0x15eef75fe5ecafe5b190e3a1f52be63de3e73c22a950b22a71c2476456a2a366::guild::create_guild \
+    @0x337f53581506fb8b691be77c44c94788ea2b7a6b9f19526008b7643d6013794b \
+    '"Guild A"' \
+    @0x0346f77d651fde19feb3dfa20cd091b104ea57df72bfa607ad23e5b84fe072e5
+
+
+sui client ptb \
+    --move-call 0x15eef75fe5ecafe5b190e3a1f52be63de3e73c22a950b22a71c2476456a2a366::guild::store_pet_to_guild \
+    @0xe832db9e80a7b1cab0b0ceabd3bdc33e90fa5ba0177529156442a117d0bb8395 \
+    @0xd4744bb330beaf3c451cda1fa99560344b9beb7647ea1368f7b5766a5451e075
